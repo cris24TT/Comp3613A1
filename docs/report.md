@@ -127,21 +127,24 @@ erDiagram
 
 ### Apply for Internship (Student)
 
-![Apply for Internship](wireframes/apply-for-internship..jpg)
+![Apply for Internship](wireframes/apply-for-internship.jpg)
 
 ### Review Internship Applications (Coordinator)
 
-![Review Internship Applications](wireframes/reiew-applications..jpg)
+![Review Internship Applications](wireframes/reiew-applications.jpg)
 
-### Track Application Status and View Application Details (Student)
+### Track Application Status (Student)
 
-![Track Application Status and View Application Details](wireframes/track-status-and-details.jpg)
+![Track Application Status](wireframes/track-application-status.jpg)
+
+### View Application Details (Student)
+
+![View Application Details](wireframes/track-application-details.jpg)
 
 Wireframe coverage notes:
-- The current set covers the student apply flow, coordinator review flow, and a combined student status/detail flow.
-- The named workflows are four distinct flows: `Apply for Internship`, `Review Internship Applications`, `Track Application Status`, and `View Application Details`.
-- The last image combines the status and details workflows, so the current set still needs a clearer separation between “status tracking” and “viewing a specific application’s details” or a note explaining the transition from the list view to the details screen.
-- The file names also need cleanup for readability and consistency, especially `reiew-applications..jpg` and the duplicate period in `apply-for-internship..jpg`.
+- The set now covers all four named workflows: `Apply for Internship`, `Review Internship Applications`, `Track Application Status`, and `View Application Details`.
+- The status and details flows are separated into distinct wireframes and can be read as two linked student journeys: list status first, then open a chosen application for details.
+- The image filenames are now consistent with the workflow names and the report reflects the intended coverage.
 
 ## Theming
 
