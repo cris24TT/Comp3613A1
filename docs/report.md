@@ -6,18 +6,55 @@ Do not put your student ID in this file if you will commit it. The PDF cover add
 
 ## Assigned project
 
+Internship Platform
+
 ## Three workflows
 
 ### 1.
+Apply for Internship (Student)
 
 ### 2.
+Review Internship Applications (Coordinator)
 
 ### 3.
+Track Application Status (Student)
+
+### 4.
+View Application Details (Student)
 
 ## Use case diagram
 
 ![Use case diagram](diagrams/use-case.png)
 
+Use-case draft assumptions: The student actor owns application submission, status tracking, and detail viewing; the coordinator owns reviewing incoming applications. The status workflow is distinct from detailed review, so “View Application Details” is a separate use case instead of being embedded within status tracking.
+
+```json
+{
+  "system": "Internship Platform",
+  "actors": [
+    {"name": "Student", "side": "left"},
+    {"name": "Coordinator", "side": "right"}
+  ],
+  "use_cases": [
+    {
+      "name": "Apply for Internship",
+      "actors": ["Student"]
+    },
+    {
+      "name": "Track Application Status",
+      "actors": ["Student"]
+    },
+    {
+      "name": "View Application Details",
+      "actors": ["Student"]
+    },
+    {
+      "name": "Review Internship Applications",
+      "actors": ["Coordinator"]
+    }
+  ]
+}
+```
 ## Model diagram
 
 First draft. Update this section in Phase 5 when polish revises the model, and note what changed.

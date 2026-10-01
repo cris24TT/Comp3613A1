@@ -1,0 +1,25 @@
+{
+  "system": "Internship Platform",
+  "actors": [
+    {"name": "Student", "side": "left"},
+    {"name": "Coordinator", "side": "right"}
+  ],
+  "use_cases": [
+    {
+      "name": "Apply for Internship",
+      "actors": ["Student"]
+    },
+    {
+      "name": "Track Application Status",
+      "actors": ["Student"]
+    },
+    {
+      "name": "View Application Details",
+      "actors": ["Student"]
+    },
+    {
+      "name": "Review Internship Applications",
+      "actors": ["Coordinator"]
+    }
+  ]
+}
