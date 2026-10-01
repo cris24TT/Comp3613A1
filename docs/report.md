@@ -59,9 +59,67 @@ Use-case draft assumptions: The student actor owns application submission, statu
 
 First draft. Update this section in Phase 5 when polish revises the model, and note what changed.
 
+Relationship notes:
+- A `Student` can submit many `Application` records, and each application belongs to one student.
+- A `Company` offers many `InternshipPosition` records, and each position belongs to one company.
+- An `InternshipPosition` can receive many applications, while each application targets one position.
+- A `Coordinator` may review many applications, but each application is assigned to one coordinator at a time.
+- A student should not apply to the same position more than once, so a unique constraint on `(student_id, position_id)` is recommended.
+
 ```mermaid
 erDiagram
-  ENTITY ||--o{ OTHER : relates
+    STUDENT ||--o{ APPLICATION : submits
+    COMPANY ||--o{ INTERNSHIP_POSITION : offers
+    INTERNSHIP_POSITION ||--o{ APPLICATION : receives
+    COORDINATOR ||--o{ APPLICATION : reviews
+
+    STUDENT {
+        int student_id PK
+        string first_name
+        string last_name
+        string email
+        string major
+        string graduation_year
+    }
+
+    COMPANY {
+        int company_id PK
+        string name
+        string industry
+        string contact_email
+    }
+
+    INTERNSHIP_POSITION {
+        int position_id PK
+        int company_id FK
+        string title
+        string description
+        string location
+        string work_type
+        date posted_at
+        string status
+    }
+
+    COORDINATOR {
+        int coordinator_id PK
+        string first_name
+        string last_name
+        string email
+        string department
+    }
+
+    APPLICATION {
+        int application_id PK
+        int student_id FK
+        int position_id FK
+        int coordinator_id FK
+        date applied_at
+        string resume_url
+        string cover_letter
+        string status
+        text review_notes
+        date reviewed_at
+    }
 ```
 
 ## Wireframes
