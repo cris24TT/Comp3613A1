@@ -65,6 +65,7 @@ Relationship notes:
 - An `InternshipPosition` can receive many applications, while each application targets one position.
 - A `Coordinator` may review many applications, but each application is assigned to one coordinator at a time.
 - A student should not apply to the same position more than once, so a unique constraint on `(student_id, position_id)` is recommended.
+- When a student creates an `Application`, it links that student to the selected `InternshipPosition` and sets the initial application `status` to `pending`.
 
 ```mermaid
 erDiagram
