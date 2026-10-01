@@ -125,15 +125,23 @@ erDiagram
 
 ## Wireframes
 
-Embed each student-crafted wireframe here (Phase 4). Paths are relative to this file:
+### Apply for Internship (Student)
 
-```markdown
-### Explore / Search Publications
+![Apply for Internship](wireframes/apply-for-internship..jpg)
 
-![Explore / Search Publications](wireframes/explore.png)
-```
+### Review Internship Applications (Coordinator)
 
-`python manage.py report` also embeds any PNG/JPG still missing from `docs/wireframes/`.
+![Review Internship Applications](wireframes/reiew-applications..jpg)
+
+### Track Application Status and View Application Details (Student)
+
+![Track Application Status and View Application Details](wireframes/track-status-and-details.jpg)
+
+Wireframe coverage notes:
+- The current set covers the student apply flow, coordinator review flow, and a combined student status/detail flow.
+- The named workflows are four distinct flows: `Apply for Internship`, `Review Internship Applications`, `Track Application Status`, and `View Application Details`.
+- The last image combines the status and details workflows, so the current set still needs a clearer separation between “status tracking” and “viewing a specific application’s details” or a note explaining the transition from the list view to the details screen.
+- The file names also need cleanup for readability and consistency, especially `reiew-applications..jpg` and the duplicate period in `apply-for-internship..jpg`.
 
 ## Theming
 
