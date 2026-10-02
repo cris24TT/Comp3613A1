@@ -1,0 +1,92 @@
+{% extends "authenticated-base.html" %}
+{% block title %}Apply for an Internship{% endblock %}
+
+{% block subpage_content %}
+<main class="container-fluid py-2">
+  <div class="d-flex flex-wrap align-items-end justify-content-between gap-3 mb-4">
+    <div>
+      <p class="text-primary fw-semibold text-uppercase small mb-1">Student workspace</p>
+      <h1 class="h3 mb-1">Apply for an Internship</h1>
+      <p class="text-secondary mb-0">Choose an open position and submit your application.</p>
+    </div>
+    <form method="get" action="{{ url_for('apply_view') }}" class="d-flex gap-2" role="search">
+      <label class="visually-hidden" for="position-search">Search internships</label>
+      <input class="form-control" id="position-search" type="search" name="q"
+             value="{{ search_query }}" placeholder="Title, company, or location">
+      <button class="btn btn-outline-primary" type="submit">Search</button>
+    </form>
+  </div>
+
+  {% if not positions %}
+  <div class="alert alert-light border" role="status">No open internships match this search.</div>
+  {% else %}
+  <form method="post" action="{{ url_for('submit_application') }}" enctype="multipart/form-data">
+    <div class="row g-4 align-items-start">
+      <section class="col-12 col-lg-5 col-xxl-4" aria-labelledby="positions-heading">
+        <h2 class="h5 mb-1" id="positions-heading">Open positions</h2>
+        <p class="small text-secondary mb-2">Select one to apply.</p>
+        <div class="position-list-scroll" role="radiogroup" aria-labelledby="positions-heading">
+          <div class="d-grid gap-2">
+            {% for position, company_name in positions %}
+            <label class="position-option d-flex gap-3">
+              <input class="form-check-input mt-1 flex-shrink-0" type="radio" name="position_id"
+                     value="{{ position.position_id }}" required>
+              <span>
+                <span class="d-block fw-bold">{{ position.title }}</span>
+                <span class="d-block text-secondary">{{ company_name }} · {{ position.location }}</span>
+                <span class="d-block small text-secondary mt-2">{{ position.work_type }} · {{ position.description }}</span>
+              </span>
+            </label>
+            {% endfor %}
+          </div>
+        </div>
+      </section>
+
+      <div class="col-12 col-lg-7 col-xxl-8">
+        <section aria-labelledby="profile-heading">
+          <h2 class="h5 mb-3" id="profile-heading">Student profile</h2>
+          <div class="row g-3">
+            <div class="col-sm-6">
+              <label class="form-label" for="first-name">First name</label>
+              <input class="form-control" id="first-name" name="first_name" required
+                     value="{{ student.first_name if student else '' }}">
+            </div>
+            <div class="col-sm-6">
+              <label class="form-label" for="last-name">Last name</label>
+              <input class="form-control" id="last-name" name="last_name" required
+                     value="{{ student.last_name if student else '' }}">
+            </div>
+            <div class="col-sm-7">
+              <label class="form-label" for="major">Major</label>
+              <input class="form-control" id="major" name="major" required
+                     value="{{ student.major if student else '' }}">
+            </div>
+            <div class="col-sm-5">
+              <label class="form-label" for="graduation-year">Graduation year</label>
+              <input class="form-control" id="graduation-year" name="graduation_year"
+                     type="number" min="2000" max="2100" required
+                     value="{{ student.graduation_year if student else '' }}">
+            </div>
+          </div>
+        </section>
+
+        <section class="mt-4" aria-labelledby="documents-heading">
+          <h2 class="h5 mb-3" id="documents-heading">Application documents</h2>
+          <div class="mb-3">
+            <label class="form-label" for="resume-file">Résumé (PDF, maximum 5 MB)</label>
+            <input class="form-control" id="resume-file" name="resume_file" type="file"
+                   accept="application/pdf,.pdf" required>
+          </div>
+          <div class="mb-3">
+            <label class="form-label" for="cover-letter">Cover letter</label>
+            <textarea class="form-control" id="cover-letter" name="cover_letter"
+                      rows="6" required></textarea>
+          </div>
+          <button class="btn btn-primary" type="submit">Submit application</button>
+        </section>
+      </div>
+    </div>
+  </form>
+  {% endif %}
+</main>
+{% endblock %}

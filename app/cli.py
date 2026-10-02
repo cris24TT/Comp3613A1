@@ -52,21 +52,27 @@ def cmd_seed(args: argparse.Namespace) -> None:
     bob / bobpass       (regular_user)
     admin / adminpass   (admin)
     """
+    from sqlmodel import select
+
     from app.database import ensure_db_and_tables, get_cli_session
+    from app.models.coordinator import Coordinator
+    from app.models.internship_position import Company, InternshipPosition
     from app.repositories.user import UserRepository
-    from app.schemas.user import AdminCreate, RegularUserCreate
+    from app.schemas.user import AdminCreate, RegularUserCreate, UserBase
     from app.utilities.security import encrypt_password
 
     _ensure_models_loaded()
     ensure_db_and_tables()
 
     demo_users = [
-        ("bob", "bob@example.com", "bobpass", "regular_user"),
+        ("bob", "bob@example.com", "bobpass", "student"),
         ("admin", "admin@example.com", "adminpass", "admin"),
     ]
 
     created = 0
     skipped = 0
+    positions_created = 0
+    coordinators_created = 0
     with get_cli_session() as session:
         repo = UserRepository(session)
         for username, email, password, role in demo_users:
@@ -86,7 +92,153 @@ def cmd_seed(args: argparse.Namespace) -> None:
             print(f"  create {username} ({role})")
             created += 1
 
-    print(f"Seed done — created {created}, skipped {skipped}.")
+        demo_coordinators = [
+            ("coord_business", "Business", "Business", "Coordinator"),
+            ("coord_compsci", "Computer Science", "Computer", "Coordinator"),
+            ("coord_design", "Design", "Design", "Coordinator"),
+            ("coord_data", "Data Analytics", "Data", "Coordinator"),
+            ("coord_engineering", "Engineering", "Engineering", "Coordinator"),
+            ("coord_marketing", "Marketing", "Marketing", "Coordinator"),
+        ]
+        for username, department, first_name, last_name in demo_coordinators:
+            user = repo.get_by_username(username)
+            if user is None:
+                user = repo.create(
+                    UserBase(
+                        username=username,
+                        email=f"{username}@example.com",
+                        password=encrypt_password("coordpass"),
+                        role="coordinator",
+                    )
+                )
+            elif user.role != "coordinator":
+                raise ValueError(
+                    f"Demo account {username} exists but is not a coordinator."
+                )
+
+            coordinator = session.exec(
+                select(Coordinator).where(Coordinator.user_id == user.id)
+            ).one_or_none()
+            if coordinator is None:
+                session.add(
+                    Coordinator(
+                        user_id=user.id,
+                        first_name=first_name,
+                        last_name=last_name,
+                        department=department,
+                    )
+                )
+                coordinators_created += 1
+
+        demo_positions = [
+            (
+                "Northstar Analytics",
+                "Technology",
+                "careers@northstar.example",
+                "Business Analyst Intern",
+                "Business",
+                "Support product research and analyze customer trends.",
+                "Toronto, ON",
+                "Hybrid",
+            ),
+            (
+                "Harbour Health",
+                "Healthcare",
+                "careers@harbourhealth.example",
+                "Software Developer Intern",
+                "Computer Science",
+                "Build internal tools with the engineering team.",
+                "Remote",
+                "Remote",
+            ),
+            (
+                "Finch Design Studio",
+                "Design",
+                "careers@finchdesign.example",
+                "UX Research Intern",
+                "Design",
+                "Interview users and help the product team evaluate design concepts.",
+                "Vancouver, BC",
+                "Hybrid",
+            ),
+            (
+                "CivicWorks Lab",
+                "Public Sector",
+                "careers@civicworks.example",
+                "Data Analyst Intern",
+                "Data Analytics",
+                "Prepare datasets and summarize findings for community programs.",
+                "Halifax, NS",
+                "On-site",
+            ),
+            (
+                "Greenline Energy",
+                "Energy",
+                "careers@greenline.example",
+                "Environmental Engineering Intern",
+                "Engineering",
+                "Support renewable energy assessments and field research.",
+                "Calgary, AB",
+                "On-site",
+            ),
+            (
+                "Maple & Main Foods",
+                "Consumer Goods",
+                "careers@maplemain.example",
+                "Marketing Intern",
+                "Marketing",
+                "Help plan campaigns and report on audience engagement.",
+                "Montreal, QC",
+                "Hybrid",
+            ),
+        ]
+        for (
+            company_name,
+            industry,
+            contact_email,
+            title,
+            department,
+            description,
+            location,
+            work_type,
+        ) in demo_positions:
+            company = session.exec(
+                select(Company).where(Company.name == company_name)
+            ).one_or_none()
+            if company is None:
+                company = Company(
+                    name=company_name,
+                    industry=industry,
+                    contact_email=contact_email,
+                )
+                session.add(company)
+                session.flush()
+
+            position = session.exec(
+                select(InternshipPosition).where(
+                    InternshipPosition.company_id == company.company_id,
+                    InternshipPosition.title == title,
+                )
+            ).one_or_none()
+            if position is None:
+                session.add(
+                    InternshipPosition(
+                        company_id=company.company_id,
+                        title=title,
+                        department=department,
+                        description=description,
+                        location=location,
+                        work_type=work_type,
+                    )
+                )
+                positions_created += 1
+        session.commit()
+
+    print(
+        f"Seed done — users created={created} skipped={skipped}; "
+        f"coordinator profiles created={coordinators_created}; "
+        f"internship positions created={positions_created}."
+    )
     print("Login with bob/bobpass or admin/adminpass")
 
 

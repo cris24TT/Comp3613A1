@@ -1,9 +1,11 @@
 {% extends "authenticated-base.html" %}
-{% block title %}Home{% endblock %}
+{% block title %}Student Workspace{% endblock %}
 
 {% block subpage_content %}
 <div class="container-fluid py-2">
-  <h1 class="h4 mb-2">Home</h1>
-  <p class="text-muted mb-0">Workflow screens replace this shell in Phase 5 implement.</p>
+  <div class="d-flex flex-wrap align-items-center justify-content-between gap-3">
+    <h1 class="h4 mb-0">Student Workspace</h1>
+    <a class="btn btn-primary" href="{{ url_for('apply_view') }}">Browse internships</a>
+  </div>
 </div>
 {% endblock %}

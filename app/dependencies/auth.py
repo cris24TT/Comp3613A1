@@ -41,6 +41,27 @@ async def is_logged_in(request: Request, db:SessionDep):
 IsUserLoggedIn = Annotated[bool, Depends(is_logged_in)]
 AuthDep = Annotated[User, Depends(get_current_user)]
 
+async def require_student(user: AuthDep) -> User:
+    if user.role not in {"student", "regular_user"}:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Student access is required",
+        )
+    return user
+
+
+async def require_coordinator(user: AuthDep) -> User:
+    if user.role != "coordinator":
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Coordinator access is required",
+        )
+    return user
+
+
+StudentDep = Annotated[User, Depends(require_student)]
+CoordinatorDep = Annotated[User, Depends(require_coordinator)]
+
 async def is_admin(user: User):
     return user.role == "admin"
 
