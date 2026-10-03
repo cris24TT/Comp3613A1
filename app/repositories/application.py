@@ -162,7 +162,19 @@ class ApplicationRepository:
             )
         )
         return self.db.exec(statement).one_or_none()
-        # STUDENT CODE END
+
+    def get_status_history_for_student(
+        self, application_id: int, student_id: int
+    ) -> list[ApplicationStatusChange]:
+        application = self.get_application_for_student(application_id, student_id)
+        if application is None:
+            return []
+        statement = (
+            select(ApplicationStatusChange)
+            .where(ApplicationStatusChange.application_id == application_id)
+            .order_by(ApplicationStatusChange.changed_at.asc())
+        )
+        return list(self.db.exec(statement).all())
 
     def get_status_history_for_application(
         self, application_id: int, coordinator_id: int

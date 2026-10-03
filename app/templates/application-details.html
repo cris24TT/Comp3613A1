@@ -26,6 +26,20 @@
         <h2 class="h5">Submitted</h2>
         <p class="mb-0">{{ application.applied_at.strftime("%b %d, %Y") }}</p>
       </div>
+      {% if history %}
+      <div class="bg-white border rounded-2 p-3 mt-3">
+        <h2 class="h5">Coordinator decision history</h2>
+        {% for change in history %}
+        <div class="{% if not loop.first %}border-top pt-3 mt-3{% endif %}">
+          <div class="fw-semibold">{{ change.new_status|title }}</div>
+          <div class="small text-secondary">
+            {{ change.changed_at.strftime("%b %d, %Y at %I:%M %p") }}
+          </div>
+          <p class="mb-0 mt-2">{{ change.reason }}</p>
+        </div>
+        {% endfor %}
+      </div>
+      {% endif %}
     </section>
   </div>
 </main>

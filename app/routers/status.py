@@ -45,7 +45,7 @@ async def application_details_view(
 ):
     service = ApplicationService(ApplicationRepository(db))
     try:
-        application, position, company = service.get_student_application_detail(
+        application, position, company, history = service.get_student_application_detail(
             user.id, application_id
         )
     except ValueError as error:
@@ -60,5 +60,6 @@ async def application_details_view(
             "application": application,
             "position": position,
             "company": company,
+            "history": history,
         },
     )

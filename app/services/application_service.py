@@ -74,17 +74,22 @@ class ApplicationService:
 
     def get_student_application_detail(
         self, user_id: int, application_id: int
-    ) -> tuple[Application, object, object]:
+    ) -> tuple[Application, object, object, list]:
         student = self.application_repo.get_student_by_user_id(user_id)
         if student is None or student.student_id is None:
             raise ValueError("Application not found.")
-        application = self.application_repo.get_application_for_student(
+        application_details = self.application_repo.get_application_for_student(
             application_id=application_id,
             student_id=student.student_id,
         )
-        if application is None:
+        if application_details is None:
             raise ValueError("Application not found.")
-        return application
+        application, position, company = application_details
+        history = self.application_repo.get_status_history_for_student(
+            application_id=application_id,
+            student_id=student.student_id,
+        )
+        return application, position, company, history
 
     async def submit_application(
         self,

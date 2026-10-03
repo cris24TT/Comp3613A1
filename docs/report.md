@@ -363,7 +363,7 @@ note: Service verifies assigned coordinator ownership, requires a reason, enforc
 
 ### Track Application Status (Student)
 
-Implemented the student status table from the wireframe. Each row shows the internship position title, description, current application status, and a separate **View Details** link. The student query is scoped by the signed-in student's profile in the repository/service layers; the route only binds dependencies and renders the template. The details link uses a student-owned endpoint so one student cannot open another student's application by changing the URL. Alex verified that pending, accepted, and denied states are visible, and coordinator actions can be repeated without re-authentication when coordinator and student accounts use separate browser sessions.
+Implemented the student status table from the wireframe. Each row shows the internship position title, description, current application status, and a separate **View Details** link. The student query is scoped by the signed-in student's profile in the repository/service layers; the route only binds dependencies and renders the template. The details link uses a student-owned endpoint so one student cannot open another student's application by changing the URL. Alex verified that pending, accepted, and denied states are visible, and coordinator actions can be repeated without re-authentication when coordinator and student accounts use separate browser sessions. The application details page now includes the coordinator decision history and each recorded reason; this final addition was successfully verified.
 
 <!-- student-build:code-check
 workflow: Track Application Status
