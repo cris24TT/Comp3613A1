@@ -6,7 +6,7 @@ from fastapi import UploadFile
 
 RESUME_DIRECTORY = Path("var/resumes")
 MAX_RESUME_BYTES = 5 * 1024 * 1024
-_STORAGE_KEY_PATTERN = re.compile(r"^[a-f0-9]{32}\.pdf$")
+_STORAGE_KEY_PATTERN = re.compile(r"^(?:[a-f0-9]{32}|demo-[a-z0-9-]+)\.pdf$")
 
 
 async def save_resume(upload: UploadFile) -> str:
@@ -30,3 +30,10 @@ def delete_resume(storage_key: str) -> None:
     if not _STORAGE_KEY_PATTERN.fullmatch(storage_key):
         return
     (RESUME_DIRECTORY / storage_key).unlink(missing_ok=True)
+
+
+def resume_path(storage_key: str) -> Path | None:
+    if not _STORAGE_KEY_PATTERN.fullmatch(storage_key):
+        return None
+    path = RESUME_DIRECTORY / storage_key
+    return path if path.is_file() else None

@@ -1,0 +1,65 @@
+{% extends "authenticated-base.html" %}
+{% block title %}Application Review{% endblock %}
+
+{% block subpage_content %}
+<main class="container-fluid py-2">
+  <a class="text-decoration-none" href="{{ url_for('coordinator_review_view') }}">Back to applications</a>
+  <div class="d-flex flex-wrap justify-content-between align-items-start gap-3 mt-3 mb-4">
+    <div>
+      <p class="text-primary fw-semibold text-uppercase small mb-1">Coordinator workspace</p>
+      <h1 class="h3 mb-1">{{ position.title }}</h1>
+      <p class="mb-1">{{ company.name }}</p>
+      <p class="text-secondary mb-0">{{ application.semester }} · Current status: {{ application.status }}</p>
+    </div>
+    {% if application.status != 'revoked' %}
+    <form method="post" action="{{ url_for('coordinator_review_status_action', application_id=application.application_id) }}" class="d-flex flex-wrap gap-2 align-items-end">
+      <div>
+        <label class="form-label small" for="new-status">Decision</label>
+        <select class="form-select" id="new-status" name="new_status" required>
+          <option value="accepted">Accepted</option>
+          <option value="denied">Denied</option>
+          {% if application.status == 'accepted' %}<option value="revoked">Revoked</option>{% endif %}
+        </select>
+      </div>
+      <div>
+        <label class="form-label small" for="status-reason">Reason</label>
+        <input class="form-control" id="status-reason" name="reason" required>
+      </div>
+      <button class="btn btn-primary" type="submit">Save decision</button>
+    </form>
+    {% endif %}
+  </div>
+
+  <div class="row g-4">
+    <section class="col-12 col-lg-7">
+      <h2 class="h5">Application documents</h2>
+      <div class="bg-white border rounded-2 p-3 mb-3">
+        <h3 class="h6">Cover letter</h3>
+        <p class="mb-0" style="white-space: pre-wrap">{{ application.cover_letter }}</p>
+      </div>
+      <div class="bg-white border rounded-2 p-3">
+        <h3 class="h6">Résumé</h3>
+        <p class="text-secondary mb-2">Résumé is stored securely for authorized review.</p>
+        <a class="btn btn-outline-primary btn-sm" href="{{ url_for('coordinator_review_resume', application_id=application.application_id) }}">View résumé PDF</a>
+      </div>
+    </section>
+
+    <section class="col-12 col-lg-5">
+      <h2 class="h5">Status history</h2>
+      {% if history %}
+      <div class="list-group">
+        {% for change in history %}
+        <div class="list-group-item">
+          <div class="fw-semibold">{{ change.previous_status }} → {{ change.new_status }}</div>
+          <div class="small text-secondary">{{ change.changed_at.strftime("%b %d, %Y at %I:%M %p") }}</div>
+          <p class="mb-0 mt-2">{{ change.reason }}</p>
+        </div>
+        {% endfor %}
+      </div>
+      {% else %}
+      <p class="text-secondary">No status changes have been recorded.</p>
+      {% endif %}
+    </section>
+  </div>
+</main>
+{% endblock %}

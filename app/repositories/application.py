@@ -42,6 +42,22 @@ class ApplicationRepository:
     def get_position(self, position_id: int) -> InternshipPosition | None:
         return self.db.get(InternshipPosition, position_id)
 
+    def get_position_details(
+        self, position_id: int
+    ) -> tuple[InternshipPosition, Company] | None:
+        statement = (
+            select(InternshipPosition, Company)
+            .join(Company)
+            .where(InternshipPosition.position_id == position_id)
+        )
+        return self.db.exec(statement).one_or_none()
+
+    def get_coordinator_by_user_id(self, user_id: int) -> Coordinator | None:
+        # STUDENT CODE START
+        statement = select(Coordinator).where(Coordinator.user_id == user_id)
+        return self.db.exec(statement).one_or_none()
+        # STUDENT CODE END
+
     def get_coordinator_for_department(
         self, department: str
     ) -> Coordinator | None:
@@ -76,10 +92,11 @@ class ApplicationRepository:
         return self.db.exec(statement).one()
         # STUDENT CODE END
 
-    def has_application(self, student_id: int, position_id: int) -> bool:
+    def has_application(self, student_id: int, position_id: int, semester: str) -> bool:
         statement = select(Application.application_id).where(
             Application.student_id == student_id,
             Application.position_id == position_id,
+            Application.semester == semester
         )
         return self.db.exec(statement).first() is not None
 
@@ -93,6 +110,71 @@ class ApplicationRepository:
             Application.coordinator_id == coordinator_id,
         )
         return self.db.exec(statement).one_or_none()
+        # STUDENT CODE END
+
+    def get_applications_for_coordinator(
+        self, coordinator_id: int
+    ) -> list[tuple[Application, Student, InternshipPosition, Company]]:
+        statement = (
+            select(Application, Student, InternshipPosition, Company)
+            .join(Student, Application.student_id == Student.student_id)
+            .join(
+                InternshipPosition,
+                Application.position_id == InternshipPosition.position_id,
+            )
+            .join(Company, InternshipPosition.company_id == Company.company_id)
+            .where(Application.coordinator_id == coordinator_id)
+            .order_by(
+                Application.semester.desc(),
+                Application.applied_at.desc(),
+            )
+        )
+        return list(self.db.exec(statement).all())
+
+    def get_applications_for_student(
+        self, student_id: int
+    ) -> list[tuple[Application, InternshipPosition, Company]]:
+        statement = (
+            select(Application, InternshipPosition, Company)
+            .join(
+                InternshipPosition,
+                Application.position_id == InternshipPosition.position_id,
+            )
+            .join(Company, InternshipPosition.company_id == Company.company_id)
+            .where(Application.student_id == student_id)
+            .order_by(Application.applied_at.desc())
+        )
+        return list(self.db.exec(statement).all())
+
+    def get_application_for_student(
+        self, application_id: int, student_id: int
+    ) -> tuple[Application, InternshipPosition, Company] | None:
+        statement = (
+            select(Application, InternshipPosition, Company)
+            .join(
+                InternshipPosition,
+                Application.position_id == InternshipPosition.position_id,
+            )
+            .join(Company, InternshipPosition.company_id == Company.company_id)
+            .where(
+                Application.application_id == application_id,
+                Application.student_id == student_id,
+            )
+        )
+        return self.db.exec(statement).one_or_none()
+        # STUDENT CODE END
+
+    def get_status_history_for_application(
+        self, application_id: int, coordinator_id: int
+    ) -> list[ApplicationStatusChange]:
+        # STUDENT CODE START
+        application = self.get_application_for_coordinator(application_id, coordinator_id)
+        if application is None:
+            return []
+        selector = select(ApplicationStatusChange).where(
+            ApplicationStatusChange.application_id == application_id
+        ).order_by(ApplicationStatusChange.changed_at.asc())
+        return list(self.db.exec(selector).all())
         # STUDENT CODE END
 
     def record_status_change(
@@ -133,6 +215,8 @@ class ApplicationRepository:
         resume_path: str,
         cover_letter: str,
         coordinator_id: int,
+        semester: str,
+
         
     ) -> Application:
         try:
@@ -151,6 +235,7 @@ class ApplicationRepository:
                 resume_path=resume_path,
                 cover_letter=cover_letter,
                 coordinator_id=coordinator_id,
+                semester=semester,
             )
             self.db.add(application)
             self.db.commit()

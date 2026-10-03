@@ -55,8 +55,10 @@ def cmd_seed(args: argparse.Namespace) -> None:
     from sqlmodel import select
 
     from app.database import ensure_db_and_tables, get_cli_session
+    from app.models.application import Application
     from app.models.coordinator import Coordinator
     from app.models.internship_position import Company, InternshipPosition
+    from app.models.student import Student
     from app.repositories.user import UserRepository
     from app.schemas.user import AdminCreate, RegularUserCreate, UserBase
     from app.utilities.security import encrypt_password
@@ -66,6 +68,7 @@ def cmd_seed(args: argparse.Namespace) -> None:
 
     demo_users = [
         ("bob", "bob@example.com", "bobpass", "student"),
+        ("alex", "alex@example.com", "alexpass", "student"),
         ("admin", "admin@example.com", "adminpass", "admin"),
     ]
 
@@ -140,6 +143,7 @@ def cmd_seed(args: argparse.Namespace) -> None:
                 "Support product research and analyze customer trends.",
                 "Toronto, ON",
                 "Hybrid",
+                2027
             ),
             (
                 "Harbour Health",
@@ -150,6 +154,7 @@ def cmd_seed(args: argparse.Namespace) -> None:
                 "Build internal tools with the engineering team.",
                 "Remote",
                 "Remote",
+                2027
             ),
             (
                 "Finch Design Studio",
@@ -160,6 +165,7 @@ def cmd_seed(args: argparse.Namespace) -> None:
                 "Interview users and help the product team evaluate design concepts.",
                 "Vancouver, BC",
                 "Hybrid",
+                2027
             ),
             (
                 "CivicWorks Lab",
@@ -170,6 +176,7 @@ def cmd_seed(args: argparse.Namespace) -> None:
                 "Prepare datasets and summarize findings for community programs.",
                 "Halifax, NS",
                 "On-site",
+                2027
             ),
             (
                 "Greenline Energy",
@@ -180,6 +187,7 @@ def cmd_seed(args: argparse.Namespace) -> None:
                 "Support renewable energy assessments and field research.",
                 "Calgary, AB",
                 "On-site",
+                2027
             ),
             (
                 "Maple & Main Foods",
@@ -190,6 +198,7 @@ def cmd_seed(args: argparse.Namespace) -> None:
                 "Help plan campaigns and report on audience engagement.",
                 "Montreal, QC",
                 "Hybrid",
+                2027
             ),
         ]
         for (
@@ -201,6 +210,7 @@ def cmd_seed(args: argparse.Namespace) -> None:
             description,
             location,
             work_type,
+            offering_year,
         ) in demo_positions:
             company = session.exec(
                 select(Company).where(Company.name == company_name)
@@ -229,9 +239,61 @@ def cmd_seed(args: argparse.Namespace) -> None:
                         description=description,
                         location=location,
                         work_type=work_type,
+                        offering_year=offering_year,
                     )
                 )
                 positions_created += 1
+
+        alex = repo.get_by_username("alex")
+        coordinator = session.exec(
+            select(Coordinator).where(Coordinator.department == "Computer Science")
+        ).one_or_none()
+        position = session.exec(
+            select(InternshipPosition).where(
+                InternshipPosition.title == "Software Developer Intern",
+                InternshipPosition.department == "Computer Science",
+            )
+        ).one_or_none()
+        if alex is not None and coordinator is not None and position is not None:
+            student = session.exec(
+                select(Student).where(Student.user_id == alex.id)
+            ).one_or_none()
+            if student is None:
+                student = Student(
+                    user_id=alex.id,
+                    first_name="Alex",
+                    last_name="Chen",
+                    major="Computer Science",
+                    graduation_year=2027,
+                )
+                session.add(student)
+                session.flush()
+
+            existing_application = session.exec(
+                select(Application).where(
+                    Application.student_id == student.student_id,
+                    Application.position_id == position.position_id,
+                    Application.semester == "Summer 2027",
+                )
+            ).one_or_none()
+            if existing_application is None:
+                session.add(
+                    Application(
+                        student_id=student.student_id,
+                        position_id=position.position_id,
+                        coordinator_id=coordinator.coordinator_id,
+                        semester="Summer 2027",
+                        resume_path="demo/alex-resume.pdf",
+                        cover_letter=(
+                            "I am excited to apply my software development skills "
+                            "to Harbour Health's internal tools team."
+                        ),
+                    )
+                )
+            else:
+                # Keep the repeatable demo application aligned with its private
+                # fixture after the storage key was renamed.
+                existing_application.resume_path = "demo-alex-resume.pdf"
         session.commit()
 
     print(

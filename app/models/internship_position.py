@@ -23,6 +23,10 @@ class InternshipPosition(SQLModel, table=True):
     department: str = Field(index=True)
     # STUDENT CODE END
 
+    # STUDENT CODE START
+    offering_year: int = Field(index=True)
+    # STUDENT CODE END
+
     description: str
     location: str
     work_type: str

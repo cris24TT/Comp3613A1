@@ -1,0 +1,49 @@
+{% extends "authenticated-base.html" %}
+{% block title %}Track Application Status{% endblock %}
+
+{% block subpage_content %}
+<main class="container-fluid py-2">
+  <div class="mb-4">
+    <p class="text-primary fw-semibold text-uppercase small mb-1">Student workspace</p>
+    <h1 class="h3 mb-1">Track Application Status</h1>
+    <p class="text-secondary mb-0">Review the latest status of each internship application.</p>
+  </div>
+
+  {% if not applications %}
+  <div class="alert alert-light border" role="status">
+    You have not submitted any internship applications yet.
+  </div>
+  {% else %}
+  <div class="table-responsive bg-white border rounded-2">
+    <table class="table align-middle mb-0">
+      <thead>
+        <tr>
+          <th scope="col">Position title</th>
+          <th scope="col">Description</th>
+          <th scope="col">Status</th>
+          <th scope="col" class="text-end">Details</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for application, position, company in applications %}
+        <tr>
+          <td>
+            <div class="fw-semibold">{{ position.title }}</div>
+            <div class="small text-secondary">{{ company.name }}</div>
+          </td>
+          <td>{{ position.description }}</td>
+          <td><span class="badge text-bg-primary">{{ application.status|title }}</span></td>
+          <td class="text-end">
+            <a class="btn btn-outline-primary btn-sm"
+               href="{{ url_for('application_details_view', application_id=application.application_id) }}">
+              View Details
+            </a>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% endif %}
+</main>
+{% endblock %}

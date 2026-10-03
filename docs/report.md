@@ -68,6 +68,7 @@ Relationship notes:
 - An `InternshipPosition` can receive many applications, while each application targets one position.
 - A `Coordinator` may review many applications, and each application is assigned to one coordinator immediately when submitted.
 - Each `InternshipPosition` has one department value matching the reviewing `Coordinator.department`. Among matching coordinators, assign the new application to the one with the fewest pending applications; break ties by the fewest total assigned applications.
+- Internship listings represent the Summer offering for one academic year. Store the offering year on `InternshipPosition`; derive the application's semester label as `Summer <year>` from the selected listing rather than asking the student to enter it.
 - An internship is available to applicants only when at least one coordinator has the matching department; submission rechecks eligibility before assigning.
 - Application records are archived at the end of each semester and retained for historical coordinator review; they are not deleted with the active queue.
 - Keep application metadata and decisions, but remove the private résumé PDF one year after its semester ends.
@@ -119,6 +120,7 @@ erDiagram
         int company_id FK
         string title
         string department
+      int offering_year
         string description
         string location
         string work_type
@@ -191,7 +193,7 @@ Applied the shared theme to the landing, login, and registration pages, includin
 
 ### Apply for Internship (Student)
 
-Implemented an open-position search and application form with profile fields, cover letter, and private PDF résumé upload (5 MB maximum). Submission creates or updates the student's separate profile and creates a pending application; duplicate applications to the same position are rejected. The résumé is stored under a generated key in the private local `var/resumes/` directory. After recreating the local schema with `python manage.py init`, the student opened Browse Internships, submitted an application with a PDF, and reported the success message. Added six idempotently seeded sample positions for preview. The position picker now has an independent scroll area beside the application form on desktop and remains height-limited above the form on mobile; the student confirmed this layout fits better.
+Implemented an open-position search and application form with profile fields, cover letter, and private PDF résumé upload (5 MB maximum). Submission creates or updates the student's separate profile and creates a pending application; duplicate applications to the same position in the same Summer year are rejected. The résumé is stored under a generated key in the private local `var/resumes/` directory. The student verified a PDF submission and success message, and confirmed the independently scrolling position picker fits better. The student also verified that Summer year labels display and a repeated application shows the duplicate warning. Six idempotently seeded sample positions support the layout preview.
 
 <!-- student-build:code-check
 workflow: Apply for Internship
@@ -213,7 +215,7 @@ note: Route binds form values, delegates application rules and persistence, and 
 
 Coordinator profile model uses a separate one-to-one link to `User` and stores the coordinator's department for internship eligibility matching. New accounts use explicit `student` and `coordinator` role values; existing `regular_user` accounts remain accepted as students. Application and student-workspace routes now enforce student access server-side. Coordinator-only review gating and login routing will be added with the review route.
 
-Review workflow implementation is in progress. The `Coordinator` profile, `Application` assignment fields and per-semester uniqueness, `ApplicationStatusChange` audit model, `InternshipPosition.department` matching field, least-loaded coordinator selection, coordinator-ID persistence, staffed-position listing filter, and idempotent demo department/coordinator seed data are implemented. Review behavior and coordinator-only routing/login destination remain to be completed.
+Review workflow implementation is complete. The `Coordinator` profile, `Application` assignment fields and per-semester uniqueness, `ApplicationStatusChange` audit model, `InternshipPosition.department` matching field, least-loaded coordinator selection, coordinator-ID persistence, staffed-position listing filter, idempotent demo department/coordinator seed data, coordinator queue/detail routes, read-only history display, status-change form, and coordinator login redirect are implemented. The seed creates an idempotent pending Computer Science review for `alex` (`alexpass`) assigned to `coord_compsci` (`coordpass`) without changing Bob's data. Review-detail polish added company and position context, an authorized résumé PDF link, and concise status-history timestamps; the seed repairs the demo row to use the current private résumé fixture key. Final polish changed the coordinator queue from internal numeric IDs to student names, position titles, and company names. The student verified the workflow against the wireframe.
 
 <!-- student-build:code-check
 workflow: Review Internship Applications
@@ -245,6 +247,14 @@ check: InternshipPosition department matching field
 passed: yes
 architecture_ok: yes
 note: Required indexed department string matches Coordinator.department for assignment eligibility.
+-->
+
+<!-- student-build:code-check
+workflow: Review Internship Applications
+check: InternshipPosition summer offering year
+passed: yes
+architecture_ok: yes
+note: Each internship listing has a required indexed offering_year used to derive its Summer semester label.
 -->
 
 <!-- student-build:code-check
@@ -305,6 +315,22 @@ note: Lookup filters on both application_id and coordinator_id and returns one r
 
 <!-- student-build:code-check
 workflow: Review Internship Applications
+check: Repository lists assigned applications for coordinator review
+passed: yes
+architecture_ok: yes
+note: Query filters by coordinator_id and sorts newest semester/application first.
+-->
+
+<!-- student-build:code-check
+workflow: Apply for Internship
+check: Duplicate application lookup includes the derived Summer semester
+passed: yes
+architecture_ok: yes
+note: Existing application lookup filters by student, position, and semester derived from the position's offering_year.
+-->
+
+<!-- student-build:code-check
+workflow: Review Internship Applications
 check: Service verifies coordinator ownership before status changes
 passed: yes
 architecture_ok: yes
@@ -319,6 +345,71 @@ architecture_ok: yes
 note: Empty or whitespace-only reasons are rejected before status transition processing.
 -->
 
+<!-- student-build:code-check
+workflow: Review Internship Applications
+check: Repository atomically updates status and appends audit event
+passed: yes
+architecture_ok: yes
+note: The previous status is captured before the update; the new status and ApplicationStatusChange are committed together with rollback on failure.
+-->
+
+<!-- student-build:code-check
+workflow: Review Internship Applications
+check: Service validates transitions and delegates status change
+passed: yes
+architecture_ok: yes
+note: Service verifies assigned coordinator ownership, requires a reason, enforces the transition map, and delegates persistence to the repository.
+-->
+
+### Track Application Status (Student)
+
+Implemented the student status table from the wireframe. Each row shows the internship position title, description, current application status, and a separate **View Details** link. The student query is scoped by the signed-in student's profile in the repository/service layers; the route only binds dependencies and renders the template. The details link uses a student-owned endpoint so one student cannot open another student's application by changing the URL. Alex verified that pending, accepted, and denied states are visible, and coordinator actions can be repeated without re-authentication when coordinator and student accounts use separate browser sessions.
+
+<!-- student-build:code-check
+workflow: Track Application Status
+form: choice
+layer: other
+architecture_ok: yes
+passed: yes
+note: Student chose a separate View Details link for each status row, matching the distinct details workflow.
+-->
+
+<!-- student-build:code-check
+workflow: Track Application Status
+form: snippet
+layer: model
+architecture_ok: yes
+passed: yes
+note: Student confirmed the existing indexed Application.status field matches the ERD and supports the status list.
+-->
+
+<!-- student-build:code-check
+workflow: Track Application Status
+form: snippet
+layer: router
+architecture_ok: yes
+passed: yes
+note: Student completed the status route to construct ApplicationService, call get_student_applications, and render the view without persistence logic.
+-->
+
+<!-- student-build:code-check
+workflow: Track Application Status
+form: implementation
+layer: repository
+architecture_ok: yes
+passed: yes
+note: Repository joins Application to InternshipPosition and Company while filtering by the authenticated student's student_id.
+-->
+
+<!-- student-build:code-check
+workflow: Review Internship Applications
+form: polish
+layer: repository
+architecture_ok: yes
+passed: yes
+note: Coordinator queue now joins Student, InternshipPosition, and Company so the list identifies the applicant and internship instead of exposing internal application IDs.
+-->
+
 ## Deployed app
 
 Phase 6. Public Render URL (not localhost). Markers open this to mark the three workflows.
@@ -330,6 +421,7 @@ https://
 Every account a marker needs, including extra users you added. Starter accounts:
 
 - bob / bobpass — regular user
+- alex / alexpass — demo student with a Computer Science application
 - admin / adminpass — admin
 - coord_business / coordpass — Business coordinator
 - coord_compsci / coordpass — Computer Science coordinator

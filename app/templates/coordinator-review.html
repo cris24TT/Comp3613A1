@@ -1,0 +1,32 @@
+{% extends "authenticated-base.html" %}
+{% block title %}Review Applications{% endblock %}
+
+{% block subpage_content %}
+<main class="container-fluid py-2">
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <div>
+      <p class="text-primary fw-semibold text-uppercase small mb-1">Coordinator workspace</p>
+      <h1 class="h3 mb-0">Review Applications</h1>
+    </div>
+  </div>
+
+  {% if not applications %}
+  <div class="alert alert-light border" role="status">No applications are currently assigned to you.</div>
+  {% else %}
+  <div class="list-group">
+    {% for app, student, position, company in applications %}
+    <a class="list-group-item list-group-item-action" href="{{ url_for('coordinator_review_detail_view', application_id=app.application_id) }}">
+      <div class="d-flex justify-content-between align-items-center gap-3">
+        <div>
+          <div class="fw-semibold">{{ student.first_name }} {{ student.last_name }}</div>
+          <div class="small text-secondary">{{ position.title }} · {{ company.name }}</div>
+          <div class="small text-secondary">{{ app.semester }} · {{ app.status|title }}</div>
+        </div>
+        <span class="badge text-bg-primary">View</span>
+      </div>
+    </a>
+    {% endfor %}
+  </div>
+  {% endif %}
+</main>
+{% endblock %}
