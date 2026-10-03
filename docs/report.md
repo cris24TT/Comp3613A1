@@ -414,11 +414,18 @@ note: Coordinator queue now joins Student, InternshipPosition, and Company so th
 
 Phase 6. Public Render URL (not localhost). Markers open this to mark the three workflows.
 
-https://
+https://faststarter-3v9l.onrender.com
+
+Deployment note: The application was deployed on Render from the committed
+`render.yaml` blueprint. The blueprint created the free Oregon Postgres
+database and Python web service, connected the service to the database through
+Render's internal connection string, generated the production `SECRET_KEY` and
+`CONFIG_PASSWORD`, and ran the configured production start command. The three
+workflows were tested successfully on the live deployment.
 
 ## Logins
 
-Every account a marker needs, including extra users you added. Starter accounts:
+Every account a marker needs, including extra users added by the seed data:
 
 - bob / bobpass — regular user
 - alex / alexpass — demo student with a Computer Science application
