@@ -438,7 +438,7 @@ Every account a marker needs, including extra users added by the seed data:
 - coord_marketing / coordpass — Marketing coordinator
 
 ## YouTube URL
-
+https://youtu.be/xTgr7fL7J6I
 ## Session transcripts
 
 Filled when the Guide builds the report: the agent writes each Guide chat to `docs/transcripts/<slug>.md` (Copilot Agent, Cursor, or OpenCode). `python manage.py report` packages them. Do not paste chats here during the build.
