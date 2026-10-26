@@ -167,3 +167,36 @@ async def api_review_queue(
         }
         for application, student, position, company in queue
     ]
+
+@api_router.get("/review/applications/{application_id}")
+async def api_review_detail(
+    application_id: int,
+    user: CoordinatorDep,
+    db: SessionDep,
+):
+    service = ApplicationService(ApplicationRepository(db))
+    try:
+        application, history, position, company = service.get_review_detail(
+            user.id, application_id
+        )
+    except ValueError as error:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(error)) from error
+
+    return {
+        "application_id": application.application_id,
+        "position_title": position.title,
+        "company": company.name,
+        "semester": application.semester,
+        "status": application.status,
+        "applied_at": application.applied_at,
+        "cover_letter": application.cover_letter,
+        "history": [
+            {
+                "previous_status": change.previous_status,
+                "new_status": change.new_status,
+                "reason": change.reason,
+                "changed_at": change.changed_at,
+            }
+            for change in history
+        ],
+    }
