@@ -1,12 +1,19 @@
-from fastapi import Form, HTTPException, status
+from email.mime import application
+from turtle import position
+from turtle import position
+
+from fastapi import File, Form, HTTPException, status
 
 from app.dependencies import SessionDep
+from app.models import student
 from app.repositories.user import UserRepository
 from app.services.auth_service import AuthService
 from . import api_router
 from app.dependencies.auth import StudentDep
 from app.repositories.application import ApplicationRepository
 from app.services.application_service import ApplicationService
+from app.dependencies.auth import CoordinatorDep, StudentDep
+from app.dependencies.auth import CoordinatorDep, StudentDep
 
 @api_router.post("/login")
 async def api_login(
@@ -102,3 +109,64 @@ async def api_get_my_application(
             for change in history
         ],
     }
+
+@api_router.post("/applications", status_code=status.HTTP_201_CREATED)
+async def api_apply(
+    user: StudentDep,
+    db: SessionDep,
+    resume_file: Annotated[UploadFile, File()],
+    position_id: int = Form(),
+    first_name: str = Form(),
+    last_name: str = Form(),
+    major: str = Form(),
+    graduation_year: int = Form(),
+    cover_letter: str = Form(),
+):
+    service = ApplicationService(ApplicationRepository(db))
+    profile = {
+        "first_name": first_name,
+        "last_name": last_name,
+        "major": major,
+        "graduation_year": graduation_year,
+    }
+    try:
+        application = await service.submit_application(
+            user_id=user.id,
+            profile=profile,
+            position_id=position_id,
+            resume_file=resume_file,
+            cover_letter=cover_letter,
+        )
+    except ValueError as error:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(error)) from error
+
+    return {
+        "application_id": application.application_id,
+        "position_id": application.position_id,
+        "semester": application.semester,
+        "status": application.status,
+    }
+
+@api_router.get("/review/applications")
+async def api_review_queue(
+    user:CoordinatorDep,
+    db: SessionDep,
+):
+    service = ApplicationService(ApplicationRepository(db))
+    try:
+        queue = service.get_review_queue(user.id)
+    except ValueError as error:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=str(error)) from error
+
+    return [
+        {
+            "application_id": application.application_id,
+            "student_id": student.student_id,
+            "student_name": f"{student.first_name} {student.last_name}",
+            "position_title": position.title,
+            "company": company.name,
+            "semester": application.semester,
+            "status": application.status,
+        }
+        for application, student, position, company in queue
+    ]
