@@ -1,19 +1,16 @@
-from email.mime import application
-from turtle import position
-from turtle import position
 
-from fastapi import File, Form, HTTPException, status
+from typing import Annotated
+
+from fastapi import File, Form, HTTPException, UploadFile, status
 
 from app.dependencies import SessionDep
-from app.models import student
-from app.repositories.user import UserRepository
-from app.services.auth_service import AuthService
-from . import api_router
-from app.dependencies.auth import StudentDep
+from app.dependencies.auth import CoordinatorDep, StudentDep
 from app.repositories.application import ApplicationRepository
+from app.repositories.user import UserRepository
 from app.services.application_service import ApplicationService
-from app.dependencies.auth import CoordinatorDep, StudentDep
-from app.dependencies.auth import CoordinatorDep, StudentDep
+from app.services.auth_service import AuthService
+
+from . import api_router
 
 @api_router.post("/login")
 async def api_login(
