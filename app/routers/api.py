@@ -69,3 +69,36 @@ async def api_list_my_applications(
         }
         for application, position, company in applications
     ]
+
+@api_router.get("/applications/{application_id}")
+async def api_get_my_application(
+    application_id: int,
+    user: StudentDep,
+    db: SessionDep,
+):
+    service = ApplicationService(ApplicationRepository(db))
+    try:
+        application, position, company, history = service.get_student_application_detail(
+            user.id, application_id
+        )
+    except ValueError as error:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(error)) from error
+
+    return {
+        "application_id": application.application_id,
+        "position_title": position.title,
+        "company": company.name,
+        "semester": application.semester,
+        "status": application.status,
+        "applied_at": application.applied_at,
+        "cover_letter": application.cover_letter,
+        "history": [
+            {
+                "previous_status": change.previous_status,
+                "new_status": change.new_status,
+                "reason": change.reason,
+                "changed_at": change.changed_at,
+            }
+            for change in history
+        ],
+    }
