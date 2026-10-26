@@ -26,4 +26,5 @@ from . import (
     applications,
     reviews,
     status,
+    api,
 )

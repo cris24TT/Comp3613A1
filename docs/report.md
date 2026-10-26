@@ -1,3 +1,10 @@
+<!-- student-build:skill-integrity
+status: pass
+root: e84cd692d0b85eefe546385661958c27d07e8be6c5176a82012f68ccff5c8beb
+expected_root: e84cd692d0b85eefe546385661958c27d07e8be6c5176a82012f68ccff5c8beb
+mismatches: none
+-->
+
 # COMP 3613 Assignment 1
 
 Draft this file with the Guide. **Update it after every phase milestone** before you pause. The use-case diagram is a UML PNG at `docs/diagrams/use-case.png`, linked from this file as `diagrams/use-case.png` (path relative to `docs/report.md`). The model diagram is Mermaid. **Embed wireframe images** as `wireframes/<file>` (files live in `docs/wireframes/`).
@@ -8,7 +15,7 @@ Do not put your student ID in this file if you will commit it. The PDF cover add
 
 Internship Platform
 
-## Three workflows
+## Named workflows
 
 ### 1.
 Apply for Internship (Student)
@@ -168,7 +175,7 @@ erDiagram
 
 ### Review Internship Applications (Coordinator)
 
-![Review Internship Applications](wireframes/reiew-applications.jpg)
+![Review Internship Applications](wireframes/review-applications.jpg)
 
 ### Track Application Status (Student)
 
@@ -176,7 +183,31 @@ erDiagram
 
 ### View Application Details (Student)
 
-![View Application Details](wireframes/track-application-details.jpg)
+![View Application Details](wireframes/view-application-details.jpg)
+
+<!-- student-build:wireframe-coverage
+use_case: Apply for Internship
+image: docs/wireframes/apply-for-internship.jpg
+covered: yes
+-->
+
+<!-- student-build:wireframe-coverage
+use_case: Review Internship Applications
+image: docs/wireframes/review-applications.jpg
+covered: yes
+-->
+
+<!-- student-build:wireframe-coverage
+use_case: Track Application Status
+image: docs/wireframes/track-application-status.jpg
+covered: yes
+-->
+
+<!-- student-build:wireframe-coverage
+use_case: View Application Details
+image: docs/wireframes/view-application-details.jpg
+covered: yes
+-->
 
 Wireframe coverage notes:
 - The set now covers all four named workflows: `Apply for Internship`, `Review Internship Applications`, `Track Application Status`, and `View Application Details`.
@@ -190,6 +221,23 @@ Brand: **Internship Application Portal**. The identity uses a text-only wordmark
 Applied the shared theme to the landing, login, and registration pages, including updated portal copy and form/button states. The authenticated shell uses the same wordmark and brand tokens. Removed the starter placeholder copy from the student and coordinator entry views; their routes remain as workflow entry points. The configuration utility (`/config`) is retained.
 
 ## Implementation notes
+
+### API Login
+
+Completed the `/api/login` route in `app/routers/api.py`. The route constructs the existing `UserRepository` and `AuthService`, delegates credential verification to `AuthService.authenticate_user`, returns a bearer token and user role for valid credentials, and returns HTTP 401 for invalid credentials. The route contains no persistence query logic.
+
+<!-- student-build:code-check
+workflow: API Login
+form: snippet
+layer: router
+architecture_ok: yes
+implement_confidence: 0.60
+passed: yes
+note: Skip used for the layer-choice follow-up; assumed the existing service/repository pattern and completed the thin route accordingly.
+-->
+
+Skips: 1/3 used
+- Layer-choice follow-up — assumed the existing `AuthService`/`UserRepository` pattern.
 
 ### Apply for Internship (Student)
 
@@ -441,12 +489,104 @@ Every account a marker needs, including extra users added by the seed data:
 https://youtu.be/xTgr7fL7J6I
 ## Session transcripts
 
-Filled when the Guide builds the report: the agent writes each Guide chat to `docs/transcripts/<slug>.md` (Copilot Agent, Cursor, or OpenCode). `python manage.py report` packages them. Do not paste chats here during the build.
+Filled when the Guide builds the report: the agent writes chat markdown into `docs/transcripts/`; `python manage.py report` packages them.
+
+Guide packaged **5** chat(s) in `docs/transcripts/` (and `docs/transcripts.zip`).
+
+Index: [docs/transcripts/INDEX.md](transcripts/INDEX.md)
+
+- [`native-chat-availability`](transcripts/native-chat-availability.md)
+- [`phase-5-review-and-track-status`](transcripts/phase-5-review-and-track-status.md)
+- [`phase-6-deploy-followup`](transcripts/phase-6-deploy-followup.md)
+- [`phase-6-deploy-render`](transcripts/phase-6-deploy-render.md)
+- [`report-build-current-chat`](transcripts/report-build-current-chat.md)
 
 ## Competency (student-judge)
 
-Filled when the report is built. Guide runs student-judge, writes `docs/judge.md`, and export appends the scorecard here.
+Filled by Guide from the student-judge run when this report was built.
+
+**Judged at:** 2026-10-05T00:15:00-04:00  
+**Evidence pass:** re-read current `docs/report.md`, diagrams, wireframes, readable native Copilot chats, and the newly exported transcript markdown; prior `docs/judge.md` ignored.
+
+**Student / session:** Internship Platform / COMP 3613A1 Copilot Agent project  
+**Artifact:** Guide chats for this project and the current `docs/report.md` package  
+**Phases in evidence:** 1–6 (COMP 3613; Phase 5 polish, Phase 6 deploy; never generic 0–5)
+
+## Totals
+
+| | Count / value |
+|--|--|
+| Metrics on rubric | 12 (M1–M12) |
+| N/A (excluded) | 0 |
+| Metrics scored | 12 |
+| Scoreable max | 48 |
+| Awarded total | 41 / 48 |
+| **Overall (avg of scored)** | **3.4 / 4** |
+| Impression mark | 17 / 20 |
+
+## Scorecard
+
+| ID | Metric | Score / 4 | In avg | Evidence |
+|----|--------|----------:|:------:|----------|
+| M1 | Phase discipline | 3 | yes | The report preserves the Phase 1–6 sequence, and the readable Phase 5 chat records verification/polish before the Phase 6 handoff. |
+| M2 | Problem framing | 3 | yes | The report names the Internship Platform, four `Feature (user)` workflows, actors, entities, relationships, wireframe coverage, and branding decisions. Native Phase 1–4 logs were unavailable for this fresh read, so the artefact is the strongest evidence. |
+| M3 | Decision ownership | 3 | yes | Student-authored evidence includes choosing separate status/details flows and reporting concrete mismatches: “i cannot view any resume… nor can i see the name of the company”. |
+| M4 | Artefact-before-code | 4 | yes | The report contains a UML PNG, Mermaid ERD, four wireframes, coverage markers, and implementation notes tied to those artefacts. |
+| M5 | Verification habit | 3 | yes | Student tested Bob and `coord_compsci`, reported the empty review queue, résumé failure, missing company/position, timestamp formatting, and later verified the decision-reason addition. |
+| M6 | Assignment fit | 4 | yes | Implementation notes and code-check markers show ERD-faithful models, thin routes, service/repository scoping, reused auth, themed entry points, and deployment after polish. |
+| M7 | Slice explanation | 3 | yes | The report records architecture-respecting model/route/repository/service checks, including a thin route calling `ApplicationService.submit_application`; the readable chat shows the student explaining observed workflow mismatches. |
+| M8 | Prompt quality | 3 | yes | Phase-tagged Guide prompts and concrete workflow mismatch follow-ups are present in the exported Phase 5 transcript. |
+| M9 | Response to pushback | 4 | yes | The student did not accept the first review screen: they requested fixes for résumé access, company/position context, and microseconds, then rechecked the result and requested the remaining seed-data repair. |
+| M10 | Integrity | 4 | yes | No laundering markers, edited-skill evidence, or forced answer-seeking appear in the readable chats or report. |
+| M11 | Provenance continuity | 3 | yes | The implementation and polish notes consistently trace from the Internship Platform workflows, ERD, and wireframes through the deployed report. Missing native Phase 1–4 logs limit direct continuity evidence. |
+| M12 | Sincerity trajectory | 4 | yes | No suspicion spiral was required; there are no `student-judge:sincerity` blocks and the available student turns are concrete, test-based observations. |
+
+## Strengths
+
+- Strong Phase 5 verification and polish loop: the student identified real workflow mismatches and kept refining instead of accepting the first build.
+- The report ties the ERD and wireframes to layered implementation, including thin routes and service/repository checks.
+- Deployment evidence is complete enough for marking: public Render URL, marker accounts, YouTube URL, and a documented Phase 6 handoff.
+
+## Gaps (priority order)
+
+1. Native Phase 1–4 Copilot event logs were not available in the accessible session store during this report build. The report artefacts support those phases, but the transcript appendix cannot independently show every early student turn.
+2. The report has four named workflows while the deployment/video wording sometimes says “three workflows”; clarify that status and details are the two linked student-side parts of the application-status journey if the marker needs that distinction.
+
+## Phase gate status
+
+| Phase | Status | Note |
+|-------|--------|------|
+| 1 | met | Assigned Internship Platform and named student/coordinator workflows are recorded. |
+| 2 | met | UML use-case JSON/PNG covers every named workflow and records assumptions. |
+| 3 | met | Mermaid ERD and relationship/business-rule notes are present. |
+| 4 | met | Four wireframes are present, embedded, and marked as covering the four workflows. |
+| 5 | met | Theme, ERD/wireframe implementation, student verification, and multiple polish revisions are recorded. |
+| 6 | met | Render URL, marker logins, deployment method, and live-test note are recorded. |
+
+## Recommended next practice
+
+- Preserve the early design chats in the project’s transcript store before starting the next report build, so the student’s include/extend, relationship, and wireframe-clarification decisions are directly auditable.
+
+## Integrity note
+
+- Clean. No external-assist/paste-back signal or edited-skill evidence was found in the available evidence.
+
+## Provenance flags
+
+- Native phase-1 through phase-4 event logs were unavailable to this report-build session; no replacement turns were invented.
+
+## Sincerity log summary
+
+- Blocks found: 0 | max round: 0 | min/mean/final confidence: not applicable | trend: none | cleared: yes
+
+## Skips
+
+- Skips: 0/3 used. No skip markers were found in the available native chats or current report.
 
 ## Skill integrity
 
-Filled by `python manage.py report`. Do not edit the course skills.
+Course skills are hashed at export and compared to `.agents/skills.lock.json`. Do not edit `.agents/skills/`, `.cursor/skills/`, or `AGENTS.md`.
+
+- Status: **pass**
+- Root: `e84cd692d0b85eefe546385661958c27d07e8be6c5176a82012f68ccff5c8beb`
+- none
