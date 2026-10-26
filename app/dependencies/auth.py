@@ -14,6 +14,10 @@ async def get_current_user(request:Request, db:SessionDep)->User:
         headers={"WWW-Authenticate": "Bearer"},
     )
     token = request.cookies.get("access_token")
+    if token is None:
+        auth_header = request.headers.get("Authorization")
+        if auth_header and auth_header.startswith("Bearer "):
+            token = auth_header.split(" ")[1]
 
     if token is None:
         raise credentials_exception
