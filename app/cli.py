@@ -5,6 +5,7 @@ From the project root (venv active, deps installed; ``.env`` optional — falls 
 
     python manage.py init
     python manage.py run
+    python manage.py test
     python manage.py users
     python manage.py report --name "Student Name" --id "816000000"
     python manage.py usecase
@@ -326,6 +327,18 @@ def cmd_run(args: argparse.Namespace) -> None:
     )
 
 
+def cmd_test(args: argparse.Namespace) -> None:
+    """Run the project's unit and integration tests."""
+    import pytest
+
+    test_paths = {
+        "all": "tests",
+        "unit": "tests/unit",
+        "integration": "tests/integration",
+    }
+    raise SystemExit(pytest.main(["-v", test_paths[args.test_scope]]))
+
+
 def cmd_report(args: argparse.Namespace) -> None:
     """Build the submission package: merge judge, package transcripts, write PDF.
 
@@ -468,6 +481,16 @@ def build_parser() -> argparse.ArgumentParser:
         "--no-reload", dest="reload", action="store_false", help="Disable auto-reload"
     )
     p_run.set_defaults(func=cmd_run, reload=None)
+
+    p_test = sub.add_parser("test", help="Run the unit and integration tests")
+    p_test.add_argument(
+        "test_scope",
+        nargs="?",
+        choices=["all", "unit", "integration"],
+        default="all",
+        help="Test scope to run (default: all)",
+    )
+    p_test.set_defaults(func=cmd_test)
 
     p_users = sub.add_parser("users", help="List users in the database")
     p_users.set_defaults(func=cmd_users)

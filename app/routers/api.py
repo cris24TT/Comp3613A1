@@ -200,3 +200,27 @@ async def api_review_detail(
             for change in history
         ],
     }
+
+@api_router.patch("/review/applications/{application_id}/status")
+async def api_change_status(
+    application_id: int,
+    user: CoordinatorDep,
+    db: SessionDep,
+    new_status: str = Form(),
+    reason: str = Form(),
+):
+    service = ApplicationService(ApplicationRepository(db))
+    try:
+        application = service.change_application_status_for_user(
+            user_id=user.id,
+            application_id=application_id,
+            new_status=new_status,
+            reason=reason,
+        )
+    except ValueError as error:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(error)) from error
+
+    return {
+        "application_id": application.application_id,
+        "status": application.status,
+    }
