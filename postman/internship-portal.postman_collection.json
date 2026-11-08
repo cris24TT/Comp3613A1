@@ -1,0 +1,1163 @@
+{
+  "info": {
+    "name": "Internship Application Portal API",
+    "description": "COMP 3613 Assignment 2: API tests for the four workflows (Apply, Review, Track Status, View Details) plus authentication and authorization. Run the folders in order with the Collection Runner.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "0. Setup",
+      "item": [
+        {
+          "name": "Register a fresh student",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/register",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "register"
+              ]
+            },
+            "auth": {
+              "type": "noauth"
+            },
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                {
+                  "key": "username",
+                  "value": "{{studentUsername}}",
+                  "type": "text"
+                },
+                {
+                  "key": "email",
+                  "value": "{{studentUsername}}@example.com",
+                  "type": "text"
+                },
+                {
+                  "key": "password",
+                  "value": "{{studentPassword}}",
+                  "type": "text"
+                }
+              ]
+            },
+            "description": "Creates a new student account through the registration form so every run starts clean."
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// A new student each run keeps the collection repeatable (no \"already applied\" clash).",
+                  "const suffix = Date.now();",
+                  "pm.collectionVariables.set(\"studentUsername\", \"postman_student_\" + suffix);",
+                  "pm.collectionVariables.set(\"studentPassword\", \"postmanpass\");"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Registration request is accepted\", function () {",
+                  "    pm.expect(pm.response.code).to.be.oneOf([200, 201, 303]);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "1. Authentication",
+      "item": [
+        {
+          "name": "Login as student",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "login"
+              ]
+            },
+            "auth": {
+              "type": "noauth"
+            },
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                {
+                  "key": "username",
+                  "value": "{{studentUsername}}",
+                  "type": "text"
+                },
+                {
+                  "key": "password",
+                  "value": "{{studentPassword}}",
+                  "type": "text"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () { pm.response.to.have.status(200); });",
+                  "const body = pm.response.json();",
+                  "pm.test(\"Returns a bearer access token\", function () {",
+                  "    pm.expect(body.access_token).to.be.a(\"string\").and.not.empty;",
+                  "    pm.expect(body.token_type).to.eql(\"bearer\");",
+                  "});",
+                  "pm.test(\"Role is student\", function () { pm.expect(body.role).to.eql(\"student\"); });",
+                  "pm.collectionVariables.set(\"studentToken\", body.access_token);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Login with wrong password",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "login"
+              ]
+            },
+            "auth": {
+              "type": "noauth"
+            },
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                {
+                  "key": "username",
+                  "value": "{{studentUsername}}",
+                  "type": "text"
+                },
+                {
+                  "key": "password",
+                  "value": "wrong-password",
+                  "type": "text"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 401\", function () { pm.response.to.have.status(401); });",
+                  "pm.test(\"Returns an error message\", function () {",
+                  "    pm.expect(pm.response.json().detail).to.eql(\"Invalid username or password.\");",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Login as coordinator (Computer Science)",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "login"
+              ]
+            },
+            "auth": {
+              "type": "noauth"
+            },
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                {
+                  "key": "username",
+                  "value": "coord_compsci",
+                  "type": "text"
+                },
+                {
+                  "key": "password",
+                  "value": "coordpass",
+                  "type": "text"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () { pm.response.to.have.status(200); });",
+                  "const body = pm.response.json();",
+                  "pm.test(\"Role is coordinator\", function () { pm.expect(body.role).to.eql(\"coordinator\"); });",
+                  "pm.collectionVariables.set(\"coordinatorToken\", body.access_token);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Login as coordinator (Business)",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "login"
+              ]
+            },
+            "auth": {
+              "type": "noauth"
+            },
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                {
+                  "key": "username",
+                  "value": "coord_business",
+                  "type": "text"
+                },
+                {
+                  "key": "password",
+                  "value": "coordpass",
+                  "type": "text"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () { pm.response.to.have.status(200); });",
+                  "pm.collectionVariables.set(\"otherCoordinatorToken\", pm.response.json().access_token);"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "2. Apply for Internship",
+      "item": [
+        {
+          "name": "List open positions",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/positions",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "positions"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{studentToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () { pm.response.to.have.status(200); });",
+                  "const positions = pm.response.json();",
+                  "pm.test(\"Returns a non-empty list of positions\", function () {",
+                  "    pm.expect(positions).to.be.an(\"array\").that.is.not.empty;",
+                  "});",
+                  "pm.test(\"Each position has the expected fields\", function () {",
+                  "    positions.forEach(function (p) {",
+                  "        pm.expect(p).to.have.all.keys(\"position_id\", \"title\", \"company\", \"department\",",
+                  "                                       \"location\", \"work_type\", \"offering_year\");",
+                  "    });",
+                  "});",
+                  "const target = positions.find(function (p) { return p.department === \"Computer Science\"; });",
+                  "pm.test(\"A Computer Science position is available\", function () { pm.expect(target).to.exist; });",
+                  "pm.collectionVariables.set(\"positionId\", target.position_id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Apply for internship",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/applications",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "applications"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{studentToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "resume_file",
+                  "type": "file",
+                  "src": "sample-resume.pdf"
+                },
+                {
+                  "key": "position_id",
+                  "value": "{{positionId}}",
+                  "type": "text"
+                },
+                {
+                  "key": "first_name",
+                  "value": "Postman",
+                  "type": "text"
+                },
+                {
+                  "key": "last_name",
+                  "value": "Student",
+                  "type": "text"
+                },
+                {
+                  "key": "major",
+                  "value": "Computer Science",
+                  "type": "text"
+                },
+                {
+                  "key": "graduation_year",
+                  "value": "2027",
+                  "type": "text"
+                },
+                {
+                  "key": "cover_letter",
+                  "value": "I would love to build internal tools with your team.",
+                  "type": "text"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 201 Created\", function () { pm.response.to.have.status(201); });",
+                  "const body = pm.response.json();",
+                  "pm.test(\"New application is pending\", function () { pm.expect(body.status).to.eql(\"pending\"); });",
+                  "pm.test(\"Semester comes from the position's offering year\", function () {",
+                  "    pm.expect(body.semester).to.match(/^Summer \\d{4}$/);",
+                  "});",
+                  "pm.test(\"Application is for the chosen position\", function () {",
+                  "    pm.expect(body.position_id).to.eql(Number(pm.collectionVariables.get(\"positionId\")));",
+                  "});",
+                  "pm.collectionVariables.set(\"applicationId\", body.application_id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Apply again (duplicate)",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/applications",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "applications"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{studentToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "resume_file",
+                  "type": "file",
+                  "src": "sample-resume.pdf"
+                },
+                {
+                  "key": "position_id",
+                  "value": "{{positionId}}",
+                  "type": "text"
+                },
+                {
+                  "key": "first_name",
+                  "value": "Postman",
+                  "type": "text"
+                },
+                {
+                  "key": "last_name",
+                  "value": "Student",
+                  "type": "text"
+                },
+                {
+                  "key": "major",
+                  "value": "Computer Science",
+                  "type": "text"
+                },
+                {
+                  "key": "graduation_year",
+                  "value": "2027",
+                  "type": "text"
+                },
+                {
+                  "key": "cover_letter",
+                  "value": "I would love to build internal tools with your team.",
+                  "type": "text"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 400\", function () { pm.response.to.have.status(400); });",
+                  "pm.test(\"Explains the duplicate\", function () {",
+                  "    pm.expect(pm.response.json().detail).to.eql(\"You have already applied for this internship.\");",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "3. Review Internship Applications",
+      "item": [
+        {
+          "name": "Review queue (assigned coordinator)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/review/applications",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "review",
+                "applications"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{coordinatorToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () { pm.response.to.have.status(200); });",
+                  "const id = Number(pm.collectionVariables.get(\"applicationId\"));",
+                  "const match = pm.response.json().find(function (a) { return a.application_id === id; });",
+                  "pm.test(\"New application is in the Computer Science coordinator's queue\", function () {",
+                  "    pm.expect(match).to.exist;",
+                  "    pm.expect(match.status).to.eql(\"pending\");",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Review queue (other department)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/review/applications",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "review",
+                "applications"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{otherCoordinatorToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () { pm.response.to.have.status(200); });",
+                  "const id = Number(pm.collectionVariables.get(\"applicationId\"));",
+                  "pm.test(\"Application is not assigned to another department\", function () {",
+                  "    const ids = pm.response.json().map(function (a) { return a.application_id; });",
+                  "    pm.expect(ids).to.not.include(id);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Accept application with reason",
+          "request": {
+            "method": "PATCH",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/review/applications/{{applicationId}}/status",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "review",
+                "applications",
+                "{{applicationId}}",
+                "status"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{coordinatorToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                {
+                  "key": "new_status",
+                  "value": "accepted",
+                  "type": "text"
+                },
+                {
+                  "key": "reason",
+                  "value": "Strong candidate",
+                  "type": "text"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () { pm.response.to.have.status(200); });",
+                  "pm.test(\"Status is now accepted\", function () { pm.expect(pm.response.json().status).to.eql(\"accepted\"); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Reject status change with empty reason",
+          "request": {
+            "method": "PATCH",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/review/applications/{{applicationId}}/status",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "review",
+                "applications",
+                "{{applicationId}}",
+                "status"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{coordinatorToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                {
+                  "key": "new_status",
+                  "value": "denied",
+                  "type": "text"
+                },
+                {
+                  "key": "reason",
+                  "value": "   ",
+                  "type": "text"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 400\", function () { pm.response.to.have.status(400); });",
+                  "pm.test(\"Explains that a reason is required\", function () {",
+                  "    pm.expect(pm.response.json().detail).to.eql(\"A reason is required for a status change.\");",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Review application details",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/review/applications/{{applicationId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "review",
+                "applications",
+                "{{applicationId}}"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{coordinatorToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () { pm.response.to.have.status(200); });",
+                  "const history = pm.response.json().history;",
+                  "pm.test(\"History records pending -> accepted with the reason\", function () {",
+                  "    pm.expect(history).to.have.lengthOf(1);",
+                  "    pm.expect(history[0].previous_status).to.eql(\"pending\");",
+                  "    pm.expect(history[0].new_status).to.eql(\"accepted\");",
+                  "    pm.expect(history[0].reason).to.eql(\"Strong candidate\");",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Revoke accepted application",
+          "request": {
+            "method": "PATCH",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/review/applications/{{applicationId}}/status",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "review",
+                "applications",
+                "{{applicationId}}",
+                "status"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{coordinatorToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                {
+                  "key": "new_status",
+                  "value": "revoked",
+                  "type": "text"
+                },
+                {
+                  "key": "reason",
+                  "value": "Position withdrawn by company",
+                  "type": "text"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () { pm.response.to.have.status(200); });",
+                  "pm.test(\"Status is now revoked\", function () { pm.expect(pm.response.json().status).to.eql(\"revoked\"); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Change revoked application (not allowed)",
+          "request": {
+            "method": "PATCH",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/review/applications/{{applicationId}}/status",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "review",
+                "applications",
+                "{{applicationId}}",
+                "status"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{coordinatorToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                {
+                  "key": "new_status",
+                  "value": "accepted",
+                  "type": "text"
+                },
+                {
+                  "key": "reason",
+                  "value": "Reconsidered",
+                  "type": "text"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 400\", function () { pm.response.to.have.status(400); });",
+                  "pm.test(\"Revoked is final\", function () {",
+                  "    pm.expect(pm.response.json().detail).to.eql(\"This status change is not allowed.\");",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "4. Track Status and View Details",
+      "item": [
+        {
+          "name": "Track application status",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/applications",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "applications"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{studentToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () { pm.response.to.have.status(200); });",
+                  "const id = Number(pm.collectionVariables.get(\"applicationId\"));",
+                  "const match = pm.response.json().find(function (a) { return a.application_id === id; });",
+                  "pm.test(\"Student sees the updated status\", function () {",
+                  "    pm.expect(match).to.exist;",
+                  "    pm.expect(match.status).to.eql(\"revoked\");",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "View application details",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/applications/{{applicationId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "applications",
+                "{{applicationId}}"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{studentToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () { pm.response.to.have.status(200); });",
+                  "const body = pm.response.json();",
+                  "pm.test(\"Details include the cover letter and status\", function () {",
+                  "    pm.expect(body.cover_letter).to.be.a(\"string\").and.not.empty;",
+                  "    pm.expect(body.status).to.eql(\"revoked\");",
+                  "});",
+                  "pm.test(\"Student sees the coordinator's reasons\", function () {",
+                  "    const reasons = body.history.map(function (h) { return h.reason; });",
+                  "    pm.expect(reasons).to.include(\"Strong candidate\");",
+                  "    pm.expect(reasons).to.include(\"Position withdrawn by company\");",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "View application that does not exist",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/applications/999999",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "applications",
+                "999999"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{studentToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 404\", function () { pm.response.to.have.status(404); });"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "5. Authorization",
+      "item": [
+        {
+          "name": "Student cannot open review queue",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/review/applications",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "review",
+                "applications"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{studentToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 403\", function () { pm.response.to.have.status(403); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Coordinator cannot list student applications",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/applications",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "applications"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{coordinatorToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 403\", function () { pm.response.to.have.status(403); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Request without a token",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/applications",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "applications"
+              ]
+            },
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 401\", function () { pm.response.to.have.status(401); });"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://127.0.0.1:5000"
+    },
+    {
+      "key": "studentUsername",
+      "value": ""
+    },
+    {
+      "key": "studentPassword",
+      "value": ""
+    },
+    {
+      "key": "studentToken",
+      "value": ""
+    },
+    {
+      "key": "coordinatorToken",
+      "value": ""
+    },
+    {
+      "key": "otherCoordinatorToken",
+      "value": ""
+    },
+    {
+      "key": "positionId",
+      "value": ""
+    },
+    {
+      "key": "applicationId",
+      "value": ""
+    }
+  ]
+}
